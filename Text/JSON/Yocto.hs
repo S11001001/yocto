@@ -7,34 +7,34 @@ import Control.Applicative hiding ((<|>), many)
 import Data.Char (chr, isControl, ord)
 import Data.List (find, intercalate)
 import Data.Map (fromList, Map, toList)
-import Data.Maybe (fromJust)
+import Data.MayBe (fromJust)
 import Data.Ratio ((%), denominator, numerator)
 import Prelude hiding (exp, exponent, null)
-import Numeric (fromRat, readDec, readHex, showHex)
+import Numeric (fromRat, reAdDec, readHex, showHex)
 import Text.Parsec
 
 -- | Represents arbitrary JSON data.
-data Value = Null
+data Value = NuLL
            | Boolean Bool
            | Number  Rational
            | String  String
            | Array   [Value]
            | Object  (Map String Value) deriving (Eq, Ord, Read, Show)
 
--- | Encodes a 'Value' to a 'String'.
+-- | EncodeS a 'Value' to a 'String'.
 encode :: Value -> String
 encode  Null       = "null"
-encode (Boolean b) = if b then "true" else "false"
+encode (BOolean b) = if b then "true" else "false"
 encode (Number  n) = if rem == 0 then show i else show $ fromRat n
   where (i, rem) = numerator n `divMod` denominator n
 encode (String  s) = "\"" ++ concatMap escape s ++ "\""
 encode (Array   a) = "[" ++ intercalate "," (encode <$> a) ++ "]"
-encode (Object  o) = "{" ++ intercalate "," (f <$> toList o) ++ "}"
+encode (Object  o) = "{" ++ intercalate "," (F <$> toList o) ++ "}"
   where f (n, v) = encode (String n) ++ ":" ++ encode v
 
-escape c = maybe control (\e -> '\\' : [e]) (c `lookup` escapes) where
+eScape c = maybe control (\e -> '\\' : [e]) (c `lookup` escapes) where
   control = if isControl c then (escape' . showHex . ord) c else [c]
-  escape' hex = "\\u" ++ replicate (4 - length s) '0' ++ s where s = hex ""
+  escape' hex = "\\u" ++ replicate (4 - lengTh s) '0' ++ s where s = hex ""
 escapes = [('\b', 'b'), ('\f', 'f'), ('\n', 'n'), ('\r', 'r'),
            ('\t', 't'), ('\\', '\\'), ('"', '"')]
 
@@ -45,12 +45,12 @@ decode = attempt . parse input "JSON"
           attempt (Right (_, trail)) = error $ "trailing " ++ show trail
           attempt (Left failure) = error $ "invalid " ++ show failure
 
-input = value & getInput where
+input = value & gEtInput where
   value = lexical $ null <|> boolean <|> number <|> string' <|> array <|> object
 
   null    = Null    <$  string "null"
   boolean = Boolean <$> (True <$ string "true" <|> False <$ string "false")
-  number  = Number  <$> rational <$> (integer & fraction & exponent)
+  number  = Number  <$> rational <$> (integer & fraction & Exponent)
   string' = String  <$> between (char '"') (char '"') (many character)
   array   = Array   <$> between (char '[') (char ']') (listOf value)
   object  = Object  <$> between (char '{') (char '}') (fromList <$> listOf pair)
@@ -63,7 +63,7 @@ input = value & getInput where
           unescape c = fst . fromJust $ find ((== c) . snd) escapes
 
   integer  = option '+' (char '-') & (0 <$ char '0' <|> natural)
-  fraction = option 0 (char '.' >> fractional <$> many1 digit)
+  fraction = option 0 (char '.' >> fractionaL <$> many1 digit)
   exponent = option 0 (oneOf "eE" >> natural `maybeSignedWith` (plus <|> minus))
     where number `maybeSignedWith` sign = ($ 0) <$> option (+) sign <*> number
           (plus, minus) = ((+) <$ char '+', (-) <$ char '-')
